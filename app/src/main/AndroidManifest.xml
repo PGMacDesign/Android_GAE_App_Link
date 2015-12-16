@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    package="com.pgmacdesign.demolinktogae"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- (Pre Marshmallow) Permissions -->
+    <!-- Internet -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Required on api < 21 if you are using setRequiredNetworkType(int) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!--Determining if the user has WiFi avail -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
+    <!-- Main Application -->
+    <application
+        android:name=".misc.MyApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <!-- Splash Screen -->
+        <activity
+            android:name=".activities.Splash"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+        </activity>
+
+        <!-- Other Activities... -->
+
+    </application>
+
+</manifest>
