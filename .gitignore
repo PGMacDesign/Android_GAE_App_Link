@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b620cdb15de8df75633ebeb0504086ed7e819b52
 *.iml
 .gradle
 /local.properties
@@ -35,4 +38,7 @@ proguard/
 
 # Log Files
 *.log
+<<<<<<< HEAD
 >>>>>>> a42d63e7e9e8f3d100284967bb392d2a00f4a5e7
+=======
+>>>>>>> b620cdb15de8df75633ebeb0504086ed7e819b52
