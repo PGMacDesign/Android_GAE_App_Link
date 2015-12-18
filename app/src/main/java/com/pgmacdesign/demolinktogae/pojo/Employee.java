@@ -7,10 +7,14 @@ import java.util.Date;
  */
 public class Employee extends MasterObject{
 
+    private Long id;
+    private String sessionId;
+    private byte[] picture;
     private String firstName;
     private String lastName;
     private Date hireDate;
-    private boolean attendedHrTraining;
+    private Boolean attendedHrTraining;
+    private String message;
 
     public String getFirstName() {
         return firstName;
@@ -36,11 +40,43 @@ public class Employee extends MasterObject{
         this.hireDate = hireDate;
     }
 
-    public boolean isAttendedHrTraining() {
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    public byte[] getPicture() {
+        return picture;
+    }
+
+    public void setPicture(byte[] picture) {
+        this.picture = picture;
+    }
+
+    public Boolean getAttendedHrTraining() {
         return attendedHrTraining;
     }
 
-    public void setAttendedHrTraining(boolean attendedHrTraining) {
+    public void setAttendedHrTraining(Boolean attendedHrTraining) {
         this.attendedHrTraining = attendedHrTraining;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

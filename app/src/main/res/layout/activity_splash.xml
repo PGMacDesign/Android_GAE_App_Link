@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <EditText
-        android:id="@+id/splash_username"
+        android:id="@+id/splash_first_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -16,7 +16,22 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="32dp"
         android:ems="10"
-        android:hint="Username"
+        android:hint="First Name"
+        android:inputType="textEmailAddress"
+        />
+
+    <EditText
+        android:id="@+id/splash_last_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/splash_first_name"
+        android:layout_marginEnd="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:ems="10"
+        android:hint="Last Name"
         android:inputType="textEmailAddress"
         />
 
@@ -24,7 +39,7 @@
         android:id="@+id/splash_pw"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/splash_username"
+        android:layout_below="@+id/splash_last_name"
         android:layout_marginEnd="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"

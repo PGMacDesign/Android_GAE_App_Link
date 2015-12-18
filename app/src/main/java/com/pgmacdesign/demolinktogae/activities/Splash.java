@@ -1,5 +1,7 @@
 package com.pgmacdesign.demolinktogae.activities;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -30,10 +32,20 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
     //UI
     private RelativeLayout splash_progress_view;
     private ProgressBar splash_loading_bar;
-    private EditText splash_username, splash_pw;
+    private EditText splash_first_name, splash_last_name, splash_pw;
     private Button splash_button;
     private TextView splash_halp;
 
+    //https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/checkUserData
+    //https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/updateEmployee
+    //Misc
+    private static final String tutorialURL = "https://pgmacdesign.wordpress.com/";
+    private static final String signinURL = "https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/checkUserData";
+    private static final String getEmployeesURL = "https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/getEmployees";
+    private static final String updateEmployeeURL = "https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/updateEmployee";
+
+    private static final String sessionId = "ah5zfmNvbS1wZ21hY2Rlc2lnbi1hbmRyb2lkdGVzdDJyDgsSBVRva2VuIgMyMzMM";
+    private static final Long testId = 4755868826468352L; //Should be lastName 94
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +54,30 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
 
         initialize();
         setDefaults();
+
+        //TESTING
+        User user = new User();
+        user.setFirstName("patrick");
+        user.setLastName("MacDowell");
+        user.setPassword("password123");
+        MyUtilities.SendNetworkRequest sendNetworkRequest = new MyUtilities.SendNetworkRequest(
+                this, MyUtilities.pojoObjects.USER, signinURL, user);
+        Void[] param = null;
+        //sendNetworkRequest.execute(param);
+
+
+        //OTHER TESTING
+        Employee emp = new Employee();
+        emp.setId(testId);
+        emp.setFirstName("TESTING");
+        emp.setLastName("CHANGED LAST NAME");
+        emp.setAttendedHrTraining(true);
+        emp.setSessionId(sessionId);
+        MyUtilities.SendNetworkRequest sendNetworkRequest2 = new MyUtilities.SendNetworkRequest(
+                this, MyUtilities.pojoObjects.EMPLOYEE, updateEmployeeURL, emp);
+        Void[] param2 = null;
+        sendNetworkRequest2.execute(param2);
+        //END TESTING
     }
 
     /**
@@ -52,7 +88,8 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
         //UI
         splash_progress_view = (RelativeLayout) this.findViewById(R.id.splash_progress_view);
         splash_loading_bar = (ProgressBar) this.findViewById(R.id.splash_loading_bar);
-        splash_username = (EditText) this.findViewById(R.id.splash_username);
+        splash_first_name = (EditText) this.findViewById(R.id.splash_first_name);
+        splash_last_name = (EditText) this.findViewById(R.id.splash_last_name);
         splash_pw = (EditText) this.findViewById(R.id.splash_pw);
         splash_button = (Button) this.findViewById(R.id.splash_button);
         splash_halp = (TextView) this.findViewById(R.id.splash_halp);
@@ -62,20 +99,11 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
         splash_halp.setOnClickListener(this);
 
         //Text listeners
-        splash_username.addTextChangedListener(this);
+        splash_first_name.addTextChangedListener(this);
+        splash_last_name.addTextChangedListener(this);
         splash_pw.addTextChangedListener(this);
 
-        //TESTING
-        User user = new User();
-        user.setFirstName("patrick");
-        user.setLastName("MacDowell");
-        user.setPassword("password123");
-        String url = "https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/checkUserData";
-        MyUtilities.SendNetworkRequest sendNetworkRequest = new MyUtilities.SendNetworkRequest(
-                this, MyUtilities.pojoObjects.USER, url, user);
-        Void[] param = null;
-        sendNetworkRequest.execute(param);
-        //END TESTING
+
     }
 
     /**
@@ -99,6 +127,67 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
         switch (v.getId()){
             case R.id.splash_button:
                 //Set the progress view visibility and to start spinning
+                //Also hides the buttons so they cannot be pressed during loading
+                spinProgressWheel(true);
+
+                //Hide the keyboard
+                MyUtilities.hideTheKeyboard(this);
+
+                //Build our user object and Make our network call to Server
+                User user = new User();
+
+                /*
+                We can safely assume these are not null here as the text listener would not let
+                the button be clickable (enabled would be false) and the user could not get here
+                 */
+                String fName = splash_first_name.getText().toString();
+                String lName = splash_last_name.getText().toString();
+                String password = splash_pw.getText().toString();
+
+                //Trim the strings to get rid of whitespace
+                fName = fName.trim();
+                lName = lName.trim();
+                password = password.trim();
+
+                //Set them to the object
+                user.setFirstName(fName);
+                user.setLastName(lName);
+                user.setPassword(password);
+
+                //Build a new Async object here, setup the params and pass it
+                MyUtilities.SendNetworkRequest sendNetworkRequest = new MyUtilities.SendNetworkRequest(
+                        this, MyUtilities.pojoObjects.USER, signinURL, user);
+                /*
+                NOTE: To be honest, I am unsure why this was erroring out, but normally you do NOT
+                need to pass anything into the execute() method call; for whatever reason this was
+                crashing every time and this solved the problem. If yours breaks, try removing
+                the passed array and see if that solves it.
+                 */
+                Void[] param = null;
+                sendNetworkRequest.execute(param);
+
+                break;
+            case R.id.splash_halp:
+                //Open up a page to the url of the tutorial here, that way they can get up to speed
+                Intent intent2 = new Intent(Intent.ACTION_VIEW);
+                intent2.setData(Uri.parse(tutorialURL));
+                //So that it will reset back to this after back button clicked
+                intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+                startActivity(intent2);
+
+                break;
+        }
+    }
+
+    /**
+     * This class will be used for spinning the progress wheel, displaying the semi-transparent
+     * overlay screen, and then dismissing both.
+     * @param bool Boolean, if true, it will START the spinning process, if false, it will stop
+     */
+    private void spinProgressWheel(boolean bool){
+        if(bool){
+            try {
+                //Progress View
                 splash_progress_view.setVisibility(View.VISIBLE);
                 splash_progress_view.bringToFront();
                 splash_loading_bar.setVisibility(View.VISIBLE);
@@ -106,23 +195,29 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
                 splash_loading_bar.setBackgroundColor(this.getResources().getColor(R.color.Semi_Transparent2));
                 splash_loading_bar.bringToFront();
 
-                //Make sure other buttons cannot be pressed during loading
+                //Buttons and clickables
                 splash_halp.setEnabled(false);
                 splash_button.setEnabled(false);
 
-                //Hide the keyboard
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                //Progress View
+                splash_loading_bar.setIndeterminate(false);
+                splash_progress_view.setVisibility(View.GONE);
+                splash_loading_bar.setVisibility(View.GONE);
 
+                //Buttons and clickables
+                splash_halp.setEnabled(true);
+                if(validateEditTexts()) {
+                    splash_button.setEnabled(true);
+                }
 
-                //Make our network call to Server
-                // TODO: 12/8/2015 Does not exist yet, but will go right here
-                // TODO: 12/8/2015 Handle response
-
-                break;
-            case R.id.splash_halp:
-                //Nothing for now
-
-                // TODO: 12/8/2015 Make an intent to open browser to page
-                break;
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
@@ -155,12 +250,14 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
      * @return
      */
     private boolean validateEditTexts(){
-        String usernameEditText = null;
+        String firstNameEditText = null;
+        String lastNameEditText = null;
         String usernamePassword = null;
 
         try {
             //Get the String from the Edit Text Fields
-            usernameEditText = splash_username.getText().toString();
+            firstNameEditText = splash_first_name.getText().toString();
+            lastNameEditText = splash_last_name.getText().toString();
             usernamePassword = splash_pw.getText().toString();
         } catch (NullPointerException e){
             //This will only be caught in the event that the ETs are null, in which case, false
@@ -168,12 +265,12 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
         } catch (Exception e){} //Insurance policy
 
         //Check for null first
-        if(usernameEditText == null || usernamePassword == null){
+        if(firstNameEditText == null || lastNameEditText == null || usernamePassword == null){
             return false;
         }
 
         //If they are both of length > 0, good to go
-        if(usernameEditText.length() > 0 && usernamePassword.length() > 0){
+        if(firstNameEditText.length() > 0 && lastNameEditText.length() > 0 && usernamePassword.length() > 0){
             return true;
         }
 
@@ -183,6 +280,7 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
 
     @Override
     public void userFinishedLoading(User pojo) {
+        spinProgressWheel(false);
         String sessionID = pojo.getSessionId();
         String message = pojo.getMessage();
         L.m("Session ID = " + sessionID);
@@ -191,26 +289,26 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
 
     @Override
     public void usersFinishedLoading(List<User> pojos) {
-
+        spinProgressWheel(false);
     }
 
     @Override
     public void employeeFinishedLoading(Employee pojo) {
-
+        spinProgressWheel(false);
     }
 
     @Override
     public void employeesFinishedLoading(List<Employee> pojos) {
-
+        spinProgressWheel(false);
     }
 
     @Override
     public void simpleNetworkResponseInt(int response) {
-
+        spinProgressWheel(false);
     }
 
     @Override
     public void simpleNetworkResponseString(String response) {
-        L.m("Error yo!");
+        spinProgressWheel(false);
     }
 }

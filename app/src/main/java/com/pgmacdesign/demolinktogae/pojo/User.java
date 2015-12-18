@@ -5,12 +5,20 @@ package com.pgmacdesign.demolinktogae.pojo;
  */
 public class User extends MasterObject {
 
+    private Long id;
     private String firstName;
     private String lastName;
     private String password;
     private String sessionId;
     private String message;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getMessage() {
         return message;

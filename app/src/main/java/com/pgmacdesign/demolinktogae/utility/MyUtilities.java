@@ -1,9 +1,12 @@
 package com.pgmacdesign.demolinktogae.utility;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -11,6 +14,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.gson.Gson;
+import com.pgmacdesign.demolinktogae.misc.L;
 import com.pgmacdesign.demolinktogae.misc.ServerCallLoadedListener;
 import com.pgmacdesign.demolinktogae.pojo.Employee;
 import com.pgmacdesign.demolinktogae.pojo.MasterObject;
@@ -18,11 +22,14 @@ import com.pgmacdesign.demolinktogae.pojo.User;
 
 import org.json.JSONObject;
 
+import java.util.List;
+
 /**
  * Created by pmacdowell on 12/15/2015.
  */
 public class MyUtilities {
 
+    // TODO: 12/17/2015 TO DO! Need to change up the input method here, add more enum, fix comp errors and handle diff 
     public enum pojoObjects{
         EMPLOYEE, USER
     }
@@ -59,6 +66,7 @@ public class MyUtilities {
         private RequestQueue requestQueue;
         private pojoObjects type;
         private T passedObject;
+        private List<T> passedObjects;
         private String url;
 
 
@@ -71,45 +79,105 @@ public class MyUtilities {
             this.url = url1;
         }
 
+        /**
+         * Overloaded method, contains an array of objects instead of a single object
+         * @param listener1
+         * @param type1
+         * @param url1
+         * @param passedObjects1
+         */
+        public SendNetworkRequest(ServerCallLoadedListener listener1, pojoObjects type1, String url1, List<T> passedObjects1) {
+            this.listener = listener1;
+            this.volleySingleton = VolleySingleton.getInstance();
+            this.requestQueue = volleySingleton.getRequestQueue();
+            this.passedObjects = passedObjects1;
+            this.type = type1;
+            this.url = url1;
+        }
+
         @Override
         protected String doInBackground(Void... params) {
-            //First we will make a Response listener for the Volley:
-            Response.Listener<JSONObject> volleyListener = new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    //Here we parse the data and send it back via the other listener
-                    String jsonResponse = response.toString();
-                    T parsedObject = MyUtilities.parseNetworkResponse(jsonResponse, type);
+            if(passedObject != null) {
+                //First we will make a Response listener for the Volley:
+                Response.Listener<JSONObject> volleyListener = new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        //Here we parse the data and send it back via the other listener
+                        String jsonResponse = response.toString();
+                        L.m("Response String = " + jsonResponse);
+                        T parsedObject = MyUtilities.parseNetworkResponse(jsonResponse, type);
 
-                    switch (type){
-                        case EMPLOYEE:
-                            Employee employee = (Employee) parsedObject;
-                            listener.employeeFinishedLoading(employee);
-                            break;
-                        case USER:
-                            User user = (User) parsedObject;
-                            listener.userFinishedLoading(user);
-                            break;
-                        default:
-                            listener.simpleNetworkResponseString("Fail");
-                            break;
+                        switch (type) {
+                            case EMPLOYEE:
+                                Employee employee = (Employee) parsedObject;
+                                listener.employeeFinishedLoading(employee);
+                                break;
+                            case USER:
+                                User user = (User) parsedObject;
+                                listener.userFinishedLoading(user);
+                                break;
+                            default:
+                                listener.simpleNetworkResponseString("Fail");
+                                break;
+                        }
                     }
-                }
-            };
-            //Error listener
-            Response.ErrorListener errorListener = new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    error.printStackTrace();
+                };
+                //Error listener
+                Response.ErrorListener errorListener = new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        listener.simpleNetworkResponseString("Error");
+                    }
+                };
+
+                try {
+                    MyUtilities.sendPostRequest(requestQueue, url, volleyListener, passedObject, errorListener);
+                } catch (Exception e) {
+                    e.printStackTrace();
                     listener.simpleNetworkResponseString("Error");
                 }
-            };
+            }
+            if(passedObjects != null){
+                //First we will make a Response listener for the Volley:
+                Response.Listener<JSONObject> volleyListener = new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        //Here we parse the data and send it back via the other listener
+                        String jsonResponse = response.toString();
+                        L.m("Response String = " + jsonResponse);
+                        T parsedObject = MyUtilities.parseNetworkResponse(jsonResponse, type);
 
-            try {
-                MyUtilities.sendPostRequest(requestQueue, url, volleyListener, passedObject, errorListener);
-            } catch (Exception e){
-                e.printStackTrace();
-                listener.simpleNetworkResponseString("Error");
+                        switch (type) {
+                            case EMPLOYEE:
+                                Employee employee = (Employee) parsedObject;
+                                listener.employeeFinishedLoading(employee);
+                                break;
+                            case USER:
+                                User user = (User) parsedObject;
+                                listener.userFinishedLoading(user);
+                                break;
+                            default:
+                                listener.simpleNetworkResponseString("Fail");
+                                break;
+                        }
+                    }
+                };
+                //Error listener
+                Response.ErrorListener errorListener = new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                        listener.simpleNetworkResponseString("Error");
+                    }
+                };
+
+                try {
+                    MyUtilities.sendPostRequest(requestQueue, url, volleyListener, passedObjects, errorListener);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    listener.simpleNetworkResponseString("Error");
+                }
             }
             return null;
         }
@@ -140,6 +208,10 @@ public class MyUtilities {
                 listener,
                 errorListener
         );
+        //TEST
+        L.m("URL = " + url);
+        L.m("requestBody = " + requestBody);
+        //END TEST
         requestQueue.add(jsonObjectRequest);
 
         return;
@@ -254,5 +326,25 @@ public class MyUtilities {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * This will hide the keyboard
+     * @param activeActivity The current activity
+     */
+    public static void hideTheKeyboard(Activity activeActivity) {
+        try {
+            //IM Object used for acting upon the digital keyboard
+            InputMethodManager inputMethodManager = (InputMethodManager) activeActivity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+            //Find the currently focused view, so we can grab the correct window token from it.
+            View view = activeActivity.getCurrentFocus();
+            //If no view currently has focus, create a new one, just so we can grab a window token from it
+            if (view == null) {
+                view = new View(activeActivity);
+            }
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
