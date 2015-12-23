@@ -22,6 +22,7 @@ import com.pgmacdesign.demolinktogae.pojo.User;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,9 +30,9 @@ import java.util.List;
  */
 public class MyUtilities {
 
-    // TODO: 12/17/2015 TO DO! Need to change up the input method here, add more enum, fix comp errors and handle diff 
+    // TODO: 12/17/2015 TO DO! Need to change up the input method here,  fix comp errors and handle diff
     public enum pojoObjects{
-        EMPLOYEE, USER
+        EMPLOYEE, USER, EMPLOYEE_LIST, USER_LIST
     }
     /**
      * Checks for network connectivity either via wifi or cellular.
@@ -66,7 +67,6 @@ public class MyUtilities {
         private RequestQueue requestQueue;
         private pojoObjects type;
         private T passedObject;
-        private List<T> passedObjects;
         private String url;
 
 
@@ -75,22 +75,6 @@ public class MyUtilities {
             this.volleySingleton = VolleySingleton.getInstance();
             this.requestQueue = volleySingleton.getRequestQueue();
             this.passedObject = passedObject1;
-            this.type = type1;
-            this.url = url1;
-        }
-
-        /**
-         * Overloaded method, contains an array of objects instead of a single object
-         * @param listener1
-         * @param type1
-         * @param url1
-         * @param passedObjects1
-         */
-        public SendNetworkRequest(ServerCallLoadedListener listener1, pojoObjects type1, String url1, List<T> passedObjects1) {
-            this.listener = listener1;
-            this.volleySingleton = VolleySingleton.getInstance();
-            this.requestQueue = volleySingleton.getRequestQueue();
-            this.passedObjects = passedObjects1;
             this.type = type1;
             this.url = url1;
         }
@@ -105,17 +89,40 @@ public class MyUtilities {
                         //Here we parse the data and send it back via the other listener
                         String jsonResponse = response.toString();
                         L.m("Response String = " + jsonResponse);
-                        T parsedObject = MyUtilities.parseNetworkResponse(jsonResponse, type);
 
                         switch (type) {
                             case EMPLOYEE:
+                                T parsedObject = MyUtilities.parseNetworkResponse(jsonResponse, type);
                                 Employee employee = (Employee) parsedObject;
                                 listener.employeeFinishedLoading(employee);
                                 break;
+
+                            case EMPLOYEE_LIST:
+                                MasterObject masterObject = MyUtilities.parseNetworkResponseMaster(jsonResponse);
+                                List<Employee> employeeList = masterObject.getEmployees();
+                                List<Employee> listToReturn = new ArrayList<>();
+                                for(Employee emp : employeeList){
+                                    listToReturn.add(emp);
+                                }
+                                listener.employeesFinishedLoading(listToReturn);
+                                break;
+
                             case USER:
-                                User user = (User) parsedObject;
+                                T parsedObject2 = MyUtilities.parseNetworkResponse(jsonResponse, type);
+                                User user = (User) parsedObject2;
                                 listener.userFinishedLoading(user);
                                 break;
+
+                            case USER_LIST:
+                                MasterObject masterObject1 = MyUtilities.parseNetworkResponseMaster(jsonResponse);
+                                List<User> userList = masterObject1.getUsers();
+                                List<User> listToReturn1 = new ArrayList<>();
+                                for(User user1 : userList){
+                                    listToReturn1.add(user1);
+                                }
+                                listener.usersFinishedLoading(listToReturn1);
+                                break;
+
                             default:
                                 listener.simpleNetworkResponseString("Fail");
                                 break;
@@ -126,54 +133,14 @@ public class MyUtilities {
                 Response.ErrorListener errorListener = new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        listener.simpleNetworkResponseString("Volley Error");
+                        L.m("Volley Error");
                         error.printStackTrace();
-                        listener.simpleNetworkResponseString("Error");
                     }
                 };
 
                 try {
                     MyUtilities.sendPostRequest(requestQueue, url, volleyListener, passedObject, errorListener);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    listener.simpleNetworkResponseString("Error");
-                }
-            }
-            if(passedObjects != null){
-                //First we will make a Response listener for the Volley:
-                Response.Listener<JSONObject> volleyListener = new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        //Here we parse the data and send it back via the other listener
-                        String jsonResponse = response.toString();
-                        L.m("Response String = " + jsonResponse);
-                        T parsedObject = MyUtilities.parseNetworkResponse(jsonResponse, type);
-
-                        switch (type) {
-                            case EMPLOYEE:
-                                Employee employee = (Employee) parsedObject;
-                                listener.employeeFinishedLoading(employee);
-                                break;
-                            case USER:
-                                User user = (User) parsedObject;
-                                listener.userFinishedLoading(user);
-                                break;
-                            default:
-                                listener.simpleNetworkResponseString("Fail");
-                                break;
-                        }
-                    }
-                };
-                //Error listener
-                Response.ErrorListener errorListener = new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        error.printStackTrace();
-                        listener.simpleNetworkResponseString("Error");
-                    }
-                };
-
-                try {
-                    MyUtilities.sendPostRequest(requestQueue, url, volleyListener, passedObjects, errorListener);
                 } catch (Exception e) {
                     e.printStackTrace();
                     listener.simpleNetworkResponseString("Error");
@@ -327,7 +294,29 @@ public class MyUtilities {
         }
         return null;
     }
+    public static <T extends MasterObject> MasterObject parseNetworkResponseMaster(String jsonResponse) {
+        //Declare Variables
+        Gson gson = new Gson();
+        List<T> returnObjects = new ArrayList<>();
 
+        //Check if the data is null or empty
+        if(jsonResponse == null){
+            return null;
+        }
+        if(jsonResponse.isEmpty()){
+            return null;
+        }
+
+        //Check the type passed and convert it. If valid, return it
+        try {
+            MasterObject myMasterObject = gson.fromJson(jsonResponse, MasterObject.class);
+            return myMasterObject;
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
     /**
      * This will hide the keyboard
      * @param activeActivity The current activity

@@ -17,6 +17,7 @@ import android.widget.TextView;
 import com.pgmacdesign.demolinktogae.R;
 import com.pgmacdesign.demolinktogae.misc.L;
 import com.pgmacdesign.demolinktogae.misc.ServerCallLoadedListener;
+import com.pgmacdesign.demolinktogae.misc.SharedPrefs;
 import com.pgmacdesign.demolinktogae.pojo.Employee;
 import com.pgmacdesign.demolinktogae.pojo.User;
 import com.pgmacdesign.demolinktogae.utility.MyUtilities;
@@ -41,10 +42,9 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
     //Misc
     private static final String tutorialURL = "https://pgmacdesign.wordpress.com/";
     private static final String signinURL = "https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/checkUserData";
-    private static final String getEmployeesURL = "https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/getEmployees";
     private static final String updateEmployeeURL = "https://com-pgmacdesign-androidtest2.appspot.com/_ah/api/testendpoint/v1/updateEmployee";
 
-    private static final String sessionId = "ah5zfmNvbS1wZ21hY2Rlc2lnbi1hbmRyb2lkdGVzdDJyDgsSBVRva2VuIgMyMzMM";
+    private static final String sessionId = "ah5zfmNvbS1wZ21hY2Rlc2lnbi1hbmRyb2lkdGVzdDJyDgsSBVRva2VuIgM3OTEM";
     private static final Long testId = 4755868826468352L; //Should be lastName 94
 
     @Override
@@ -54,6 +54,13 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
 
         initialize();
         setDefaults();
+
+        String sessionId = SharedPrefs.getString("sessionId", null);
+        if(sessionId != null){
+            Intent intent = new Intent(this,MainActivity.class);
+            this.startActivity(intent);
+            this.finish();
+        }
 
         //TESTING
         User user = new User();
@@ -76,7 +83,11 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
         MyUtilities.SendNetworkRequest sendNetworkRequest2 = new MyUtilities.SendNetworkRequest(
                 this, MyUtilities.pojoObjects.EMPLOYEE, updateEmployeeURL, emp);
         Void[] param2 = null;
-        sendNetworkRequest2.execute(param2);
+        //sendNetworkRequest2.execute(param2);
+
+
+        //Other other testing
+
         //END TESTING
     }
 
@@ -122,6 +133,10 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
         splash_progress_view.setVisibility(View.GONE);
     }
 
+    /**
+     * Manages the onClick events
+     * @param v
+     */
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -280,35 +295,52 @@ public class Splash extends AppCompatActivity implements View.OnClickListener, T
 
     @Override
     public void userFinishedLoading(User pojo) {
+        //Stop the progress wheel from spinning here as the call has ended
         spinProgressWheel(false);
+        //If the returned object is null, return null
+        if(pojo == null){
+            return;
+        }
+        //Get the sessionId as this what we signed in for.
         String sessionID = pojo.getSessionId();
-        String message = pojo.getMessage();
-        L.m("Session ID = " + sessionID);
-        L.m("Message = " + message);
+
+        if(sessionID != null){
+            //Put the session ID into shared prefs and then continue on
+            SharedPrefs.save("sessionId", sessionID);
+            Intent intent = new Intent(this,MainActivity.class);
+            this.startActivity(intent);
+            this.finish();
+        }
     }
 
     @Override
     public void usersFinishedLoading(List<User> pojos) {
         spinProgressWheel(false);
+        //
     }
 
     @Override
     public void employeeFinishedLoading(Employee pojo) {
         spinProgressWheel(false);
+        //
     }
 
     @Override
     public void employeesFinishedLoading(List<Employee> pojos) {
         spinProgressWheel(false);
+        L.toast(this, "POJO SIZE = " + pojos.size());
+
     }
 
     @Override
     public void simpleNetworkResponseInt(int response) {
         spinProgressWheel(false);
+        //
     }
 
     @Override
     public void simpleNetworkResponseString(String response) {
         spinProgressWheel(false);
+        //
     }
 }
