@@ -10,25 +10,37 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            multiDexEnabled true
         }
     }
     repositories {
         maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        jcenter()
+    }
+    dependencies {
+        compile fileTree(include: ['*.jar'], dir: 'libs')
+        testCompile 'junit:junit:4.12'
+        compile 'com.android.support:appcompat-v7:23.1.1'
+        compile 'com.android.support:design:23.1.1'
+        //GSON
+        //compile files('src/main/libs/gson-2.5.jar')
+        //Volley
+        compile 'com.mcxiaoke.volley:library:1.0.19'
+
+        //OkHttp and Retrofit
+        //Type-safe HTTP client for Android and Java: https://github.com/square/retrofit
+        compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
+        //Retrofit response converter for GSON (https://github.com/google/gson)
+        compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
+        compile 'com.squareup.okhttp:okhttp-urlconnection:2.5.0'
+        compile 'com.squareup.okhttp:logging-interceptor:2.6.0'
+        //compile files('src/main/libs/okhttp-2.6.0.jar')
     }
 }
 
-dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'com.android.support:design:23.1.1'
-    //GSON
-    compile files('libs/gson-2.5.jar')
-    //Volley
-    compile 'com.mcxiaoke.volley:library:1.0.19'
-}
